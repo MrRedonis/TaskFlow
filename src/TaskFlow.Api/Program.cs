@@ -1,3 +1,10 @@
+using FluentValidation;
+using System.Reflection;
+using TaskFlow.Api.Configurations;
+using TaskFlow.Application.Commands.Users.AssignIssues;
+using TaskFlow.Application.Extensions;
+using TaskFlow.Infrastructure.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,7 +12,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+	var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+	options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
+});
+
+builder.Services.AddInfrastructure();
+builder.Services.AddApplication();
+
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -19,7 +37,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseExceptionHandler();
 
 app.MapControllers();
+
+using var scope = app.Services.CreateScope();
+var x = scope.ServiceProvider.GetService<IValidator<AssignIssuesToUserCommand>>();
+
+Console.WriteLine("VALIDATOR IN DI: " + (x != null));
 
 app.Run();
