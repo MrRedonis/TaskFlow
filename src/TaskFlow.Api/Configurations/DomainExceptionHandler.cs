@@ -1,17 +1,17 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.Domain.Exceptions;
 
 namespace TaskFlow.Api.Configurations
 {
-	internal class ValidationExceptionHandler : IExceptionHandler
+	internal class DomainExceptionHandler : IExceptionHandler
 	{
 		private readonly IProblemDetailsService _problemDetailsService;
-		private readonly ILogger<ValidationExceptionHandler> _logger;
+		private readonly ILogger<DomainExceptionHandler> _logger;
 
-		public ValidationExceptionHandler(
+		public DomainExceptionHandler(
 			IProblemDetailsService problemDetailsService,
-			ILogger<ValidationExceptionHandler> logger)
+			ILogger<DomainExceptionHandler> logger)
 		{
 			_problemDetailsService = problemDetailsService;
 			_logger = logger;
@@ -22,24 +22,19 @@ namespace TaskFlow.Api.Configurations
 			Exception exception,
 			CancellationToken cancellationToken)
 		{
-			if (exception is not ValidationException validationException)
+			if (exception is not DomainException domainException)
 			{
 				return false;
 			}
 
-			var errors = validationException.Errors
-				.GroupBy(e => e.PropertyName)
-				.ToDictionary(
-					g => g.Key,
-					g => g.Select(e => e.ErrorMessage).ToArray()
-				);
+			_logger.LogWarning(exception, "Domain validation failed: {Message}", domainException.Message);
 
-			var problemDetails = new ValidationProblemDetails(errors)
+			var problemDetails = new ProblemDetails
 			{
-				Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-				Title = "Validation failed",
-				Status = StatusCodes.Status400BadRequest,
-				Detail = "One or more validation errors occurred.",
+				Type = "https://tools.ietf.org/html/rfc4918#section-11.2",
+				Title = "Domain rule violation",
+				Status = StatusCodes.Status422UnprocessableEntity,
+				Detail = domainException.Message,
 				Instance = httpContext.Request.Path,
 				Extensions =
 				{

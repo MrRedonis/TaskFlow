@@ -1,7 +1,5 @@
-using FluentValidation;
 using System.Reflection;
 using TaskFlow.Api.Configurations;
-using TaskFlow.Application.Commands.Users.AssignIssues;
 using TaskFlow.Application.Extensions;
 using TaskFlow.Infrastructure.Extensions;
 
@@ -22,6 +20,7 @@ builder.Services.AddInfrastructure();
 builder.Services.AddApplication();
 
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -40,10 +39,5 @@ app.UseAuthorization();
 app.UseExceptionHandler();
 
 app.MapControllers();
-
-using var scope = app.Services.CreateScope();
-var x = scope.ServiceProvider.GetService<IValidator<AssignIssuesToUserCommand>>();
-
-Console.WriteLine("VALIDATOR IN DI: " + (x != null));
 
 app.Run();

@@ -1,17 +1,20 @@
 ﻿namespace TaskFlow.Domain.Shared
 {
-	public abstract class AggregateRoot<TId>
+	public abstract class AggregateRoot<TId> : AggregateRoot
 	{
-		private readonly List<IDomainEvent> _domainEvents = new();
-
 		public TId Id { get; private set; }
-
-		public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
 		protected AggregateRoot(TId id)
 		{
 			Id = id;
 		}
+	}
+
+	public abstract class AggregateRoot
+	{
+		private readonly List<IDomainEvent> _domainEvents = new();
+
+		public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
 		protected void AddDomainEvent(IDomainEvent @event)
 		{

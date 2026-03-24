@@ -67,6 +67,7 @@ namespace TaskFlow.Api.Controllers
 		[HttpPost("{userId:guid}/issues")]
 		[ProducesResponseType((int)HttpStatusCode.NoContent)]
 		[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+		[ProducesResponseType((int)HttpStatusCode.UnprocessableEntity)]
 		public async Task<IActionResult> AssignIssues(Guid userId, [FromBody] AssignIssuesToUserDto dto)
 		{
 			var result = await _mediator.Send(new AssignIssuesToUserCommand(userId, dto.IssueIds));
