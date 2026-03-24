@@ -6,7 +6,7 @@ using TaskFlow.Domain.Users;
 
 namespace TaskFlow.Application.Queries.Users.User
 {
-	internal class UserQueryHandler : IRequestHandler<UserQuery, ViewModels.UserVm>
+	internal class UserQueryHandler : IRequestHandler<UserQuery, ViewModels.UserVm?>
 	{
 		private readonly ILogger<UserQueryHandler> _logger;
 		private readonly IMapper _mapper;
@@ -22,7 +22,7 @@ namespace TaskFlow.Application.Queries.Users.User
 			_userFinder = userFinder;
 		}
 
-		public async Task<ViewModels.UserVm> Handle(UserQuery request, CancellationToken cancellationToken)
+		public async Task<ViewModels.UserVm?> Handle(UserQuery request, CancellationToken cancellationToken)
 		{
 			var user = await _userFinder.FindAsync(new GetUserParam(new UserId(request.UserId)), cancellationToken);
 			return _mapper.Map<ViewModels.UserVm>(user);

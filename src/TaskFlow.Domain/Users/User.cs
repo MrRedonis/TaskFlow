@@ -45,28 +45,39 @@ namespace TaskFlow.Domain.Users
 			_assignments.AddRange(assignments);
 		}
 
-		public void AssignIssues(IEnumerable<Issue> issues)
+		public IReadOnlyCollection<IssueId> AssignIssues(IEnumerable<Issue> issues)
 		{
 			var newIssues = issues.ToList();
 
 			if (!newIssues.Any())
+			{
 				throw new DomainException("No issues provided");
+			}
+
+			if (newIssues.Any(i => i.IsAssigned))
+			{
+				throw new DomainException("Some issues are already assigned");
+			}
 
 			var policy = IssueAssignmentPolicyFactory.Create(Type);
 			policy.Validate(this, newIssues);
 
+			var assignedIds = new List<IssueId>();
+
 			foreach (var issue in newIssues)
 			{
-				issue.AssignTo(Id); 
-				_assignments.Add(new IssueAssignment(issue));
+				_assignments.Add(new IssueAssignment(issue.Id, (int)issue.Difficulty));
+				assignedIds.Add(issue.Id);
 			}
-			
-			AddDomainEvent(new UserIssuesAssignedEvent(Id, newIssues.Select(i => i.Id).ToList()));
+
+			AddDomainEvent(new UserIssuesAssignedEvent(Id, assignedIds));
+
+			return assignedIds;
 		}
 
-		public void AssignIssue(Issue issue)
+		public IssueId AssignIssue(Issue issue)
 		{
-			AssignIssues(new[] { issue });
+			return AssignIssues(new[] { issue }).Single();
 		}
 	}
 }

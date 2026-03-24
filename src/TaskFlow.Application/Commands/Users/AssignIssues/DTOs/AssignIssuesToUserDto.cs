@@ -1,4 +1,4 @@
 ﻿namespace TaskFlow.Application.Commands.Users.AssignIssues.DTOs
 {
-	public sealed record AssignIssuesToUserDto(List<Guid> IssueIds);
+	public record AssignIssuesToUserDto(List<Guid> IssueIds);
 }

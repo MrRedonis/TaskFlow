@@ -26,43 +26,24 @@ namespace TaskFlow.Application.Commands.Users.AssignIssues
 
 		public async Task<Result> Handle(AssignIssuesToUserCommand request, CancellationToken cancellationToken)
 		{
-			_logger.LogInformation("Assigning {IssueCount} issue(s) to user {UserId}", request.IssueIds.Count, request.UserId);
-
-			var user = await _userRepository.GetByIdAsync(new UserId(request.UserId), cancellationToken);
-
-			if (user == null)
-			{
-				_logger.LogWarning("User {UserId} not found", request.UserId);
-				return Result.Fail("User not found");
-			}
+			var user = await _userRepository.GetByIdAsync(new UserId(request.UserId), cancellationToken)
+			           ?? throw new DomainException("User not found");
 
 			var issueIds = request.IssueIds.Select(id => new IssueId(id)).ToList();
-			var issues = (await _issueRepository.GetByIdsAsync(issueIds, cancellationToken)).ToList();
+			var issues = await _issueRepository.GetByIdsAsync(issueIds, cancellationToken);
 
 			if (issues.Count != issueIds.Count)
-			{
-				_logger.LogWarning("Some issues do not exist: {@IssueIds}", request.IssueIds);
-				return Result.Fail("Some issues do not exist");
-			}
+				throw new DomainException("Some issues not found");
 
-			var alreadyAssigned = issues.Where(i => i.UserId is not null).ToList();
-			if (alreadyAssigned.Any())
-			{
-				_logger.LogWarning("Some issues are already assigned: {@IssueIds}", alreadyAssigned.Select(i => i.Id));
-				return Result.Fail("Some issues are already assigned");
-			}
+			user.AssignIssues(issues);
 
-			try
+			foreach (var issue in issues)
 			{
-				user.AssignIssues(issues);
-			}
-			catch (DomainException ex)
-			{
-				_logger.LogWarning("Domain validation failed: {Message}", ex.Message);
-				return Result.Fail("Domain validation failed");
+				issue.AssignTo(user.Id);
 			}
 
 			await _userRepository.UpdateAsync(user, cancellationToken);
+			await _issueRepository.UpdateRangeAsync(issues, cancellationToken);
 
 			return Result.Ok();
 		}
