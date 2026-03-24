@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using TaskFlow.Domain.Issues;
+using TaskFlow.Application.Finders.Issues.ByUser;
 
 namespace TaskFlow.Application.Queries.Users.UserIssues.Profiles
 {
@@ -7,7 +7,7 @@ namespace TaskFlow.Application.Queries.Users.UserIssues.Profiles
 	{
 		public IssueVmProfile()
 		{
-			CreateMap<Issue, ViewModels.IssueVm>();
+			CreateMap<AssignedIssueFm, ViewModels.IssueVm>();
 		}
 	}
 }

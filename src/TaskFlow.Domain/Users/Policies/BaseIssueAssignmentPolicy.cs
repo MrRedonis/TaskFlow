@@ -12,7 +12,6 @@ namespace TaskFlow.Domain.Users.Policies
 			ValidateTaskReadyToAssign(issues);
 			ValidateTaskCount(user, issues);
 			ValidateDifficultyDistribution(user, issues);
-
 			ValidateRoleSpecificRules(user, issues);
 		}
 
@@ -51,10 +50,10 @@ namespace TaskFlow.Domain.Users.Policies
 			var easyRatio = (double)all.Count(d => d <= 2) / total;
 
 			if (hardRatio < 0.10 || hardRatio > 0.30)
-				throw new DomainException("User must have 10–30% difficult issues.");
+				throw new DomainException("User must have between 10% and 30% difficult issues (difficulty 4–5).");
 
 			if (easyRatio > 0.50)
-				throw new DomainException("User cannot have more than 50% easy issues.");
+				throw new DomainException("User cannot have more than 50% easy issues (difficulty 1-2).");
 		}
 	}
 }
